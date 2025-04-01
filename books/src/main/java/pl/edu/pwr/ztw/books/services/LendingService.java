@@ -2,7 +2,6 @@ package pl.edu.pwr.ztw.books.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
 import pl.edu.pwr.ztw.books.exceptions.LendingNotFoundException;
 import pl.edu.pwr.ztw.books.models.Book;
 import pl.edu.pwr.ztw.books.models.Lending;

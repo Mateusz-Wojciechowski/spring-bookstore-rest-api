@@ -4,21 +4,19 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
-
 import pl.edu.pwr.ztw.books.errors.ErrorResponseImpl;
-import pl.edu.pwr.ztw.books.models.Book;
-import pl.edu.pwr.ztw.books.models.Author;
-import pl.edu.pwr.ztw.books.services.BooksService;
-import pl.edu.pwr.ztw.books.services.AuthorService;
 import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
+import pl.edu.pwr.ztw.books.models.Author;
+import pl.edu.pwr.ztw.books.models.Book;
+import pl.edu.pwr.ztw.books.services.AuthorService;
+import pl.edu.pwr.ztw.books.services.BooksService;
 
 import java.util.List;
 import java.util.Optional;
