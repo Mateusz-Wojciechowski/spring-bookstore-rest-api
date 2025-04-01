@@ -14,6 +14,8 @@ public class AuthorService {
     private static List<Author> authors = new ArrayList<>();
     private static int nextId = 1;
 
+
+
     static {
         authors.add(new Author(nextId++, "Henryk Sienkiewicz"));
         authors.add(new Author(nextId++, "Stanisław Reymont"));

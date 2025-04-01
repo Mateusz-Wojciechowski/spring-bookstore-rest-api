@@ -2,6 +2,8 @@ package pl.edu.pwr.ztw.books.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
+import pl.edu.pwr.ztw.books.exceptions.LendingNotFoundException;
 import pl.edu.pwr.ztw.books.models.Book;
 import pl.edu.pwr.ztw.books.models.Lending;
 import pl.edu.pwr.ztw.books.models.Reader;
@@ -24,7 +26,12 @@ public class LendingService {
     }
 
     public Optional<Lending> getLendingById(int id) {
-        return lendings.stream().filter(l -> l.getId() == id).findFirst();
+        Optional<Lending> lending = lendings.stream().filter(b -> b.getId() == id).findAny();
+        if (lending.isPresent()) {
+            return lending;
+        }else{
+            throw new LendingNotFoundException("Lending not found");
+        }
     }
 
     public Optional<Lending> lendBook(int bookId, Reader reader) {

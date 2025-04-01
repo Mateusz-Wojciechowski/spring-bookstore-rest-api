@@ -1,5 +1,7 @@
 package pl.edu.pwr.ztw.books.services;
 
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
 import pl.edu.pwr.ztw.books.models.Book;
 import pl.edu.pwr.ztw.books.models.Author;
@@ -11,17 +13,18 @@ import java.util.Optional;
 
 @Service
 public class BooksService {
+
+    @Autowired
+    private  AuthorService authorService;
     private static List<Book> books = new ArrayList<>();
     private static int nextId = 1;
 
-    static {
-        Author author1 = new Author(1, "Henryk Sienkiewicz");
-        Author author2 = new Author(2, "Stanisław Reymont");
-        Author author3 = new Author(3, "Adam Mickiewicz");
-
-        books.add(new Book(nextId++, "Potop", author1, 936));
-        books.add(new Book(nextId++, "Wesele", author2, 150));
-        books.add(new Book(nextId++, "Dziady", author3, 292));
+    @PostConstruct
+    public void init() {
+        List<Author> authors = authorService.getAllAuthors();
+        books.add(new Book(nextId++, "Potop", authors.get(0), 936));
+        books.add(new Book(nextId++, "Wesele", authors.get(1), 150));
+        books.add(new Book(nextId++, "Dziady", authors.get(2), 292));
     }
 
     public List<Book> getAllBooks() {

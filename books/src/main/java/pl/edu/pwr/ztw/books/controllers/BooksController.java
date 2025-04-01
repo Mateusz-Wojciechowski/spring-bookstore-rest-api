@@ -134,8 +134,4 @@ public class BooksController {
         }
     }
 
-//    @ExceptionHandler(BookNotFoundException.class)
-//    public ResponseEntity<Object> handleBookNotFoundException(BookNotFoundException ex) {
-//        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
-//    }
 }

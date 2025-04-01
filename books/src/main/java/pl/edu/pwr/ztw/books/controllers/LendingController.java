@@ -2,6 +2,8 @@ package pl.edu.pwr.ztw.books.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -10,6 +12,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import pl.edu.pwr.ztw.books.errors.ErrorResponseImpl;
+import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
+import pl.edu.pwr.ztw.books.exceptions.LendingNotFoundException;
+import pl.edu.pwr.ztw.books.models.Book;
 import pl.edu.pwr.ztw.books.models.Lending;
 import pl.edu.pwr.ztw.books.models.Reader;
 import pl.edu.pwr.ztw.books.services.LendingService;
@@ -34,48 +40,64 @@ public class LendingController {
 
     @Operation(summary = "Get a lending by Id", description = "Fetch a lending record by its ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved lending"),
-            @ApiResponse(responseCode = "404", description = "Lending not found")
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved lending", content = @Content(schema = @Schema(implementation = Lending.class))),
+            @ApiResponse(responseCode = "404", description = "Lending not found", content = @Content(schema = @Schema(implementation = LendingNotFoundException.class)))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Lending> getLendingById(
+    public ResponseEntity<Object> getLendingById(
             @Parameter(description = "Lending ID to retrieve the lending record", required = true)
             @PathVariable("id") int id){
-        Optional<Lending> lendingOpt = lendingService.getLendingById(id);
-        return lendingOpt.map(lending -> new ResponseEntity<>(lending, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        try {
+            Optional<Lending> lendingOpt = lendingService.getLendingById(id);
+            return new ResponseEntity<>(lendingOpt.get(), HttpStatus.OK);
+        }catch (LendingNotFoundException e) {
+            ErrorResponseImpl error = new ErrorResponseImpl();
+            error.setMessage(e.getMessage());
+            error.setStatus(404);
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        }
     }
 
     @Operation(summary = "Lend a book to a reader", description = "Creates a new lending record for a book and a reader")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Book successfully lent"),
-            @ApiResponse(responseCode = "400", description = "Invalid request or book not available")
+            @ApiResponse(responseCode = "201", description = "Book successfully lent", content = @Content(schema = @Schema(implementation = Lending.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request or book not available", content = @Content(schema = @Schema(implementation = ErrorResponseImpl.class)))
     })
     @PostMapping("/lend")
-    public ResponseEntity<Lending> lendBook(
+    public ResponseEntity<Object> lendBook(
             @Parameter(description = "ID of the book to lend", required = true)
             @RequestParam int bookId,
             @Parameter(description = "Reader information", required = true)
             @RequestBody Reader reader){
-        Optional<Lending> lendingOpt = lendingService.lendBook(bookId, reader);
-        return lendingOpt.map(lending -> new ResponseEntity<>(lending, HttpStatus.CREATED))
-                .orElse(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
+
+        try {
+            Optional<Lending> lendingOpt = lendingService.lendBook(bookId, reader);
+            return new ResponseEntity<>(lendingOpt.get(), HttpStatus.OK);
+        }catch (BookNotFoundException e) {
+            ErrorResponseImpl error = new ErrorResponseImpl();
+            error.setMessage(e.getMessage());
+            error.setStatus(404);
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        }
     }
 
     @Operation(summary = "Return a lent book", description = "Marks a book as returned")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Book successfully returned"),
-            @ApiResponse(responseCode = "400", description = "Invalid request or lending record not found")
+            @ApiResponse(responseCode = "400", description = "Invalid request or lending record not found", content = @Content(schema = @Schema(implementation = ErrorResponseImpl.class)))
     })
     @PostMapping("/return")
-    public ResponseEntity<Void> returnBook(
+    public ResponseEntity<Object> returnBook(
             @Parameter(description = "ID of the lending record", required = true)
             @RequestParam int lendingId){
-        boolean returned = lendingService.returnBook(lendingId);
-        if(returned){
-            return new ResponseEntity<>(HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        try {
+            boolean returned = lendingService.returnBook(lendingId);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }catch (LendingNotFoundException e) {
+            ErrorResponseImpl error = new ErrorResponseImpl();
+            error.setMessage(e.getMessage());
+            error.setStatus(404);
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         }
     }
 }
