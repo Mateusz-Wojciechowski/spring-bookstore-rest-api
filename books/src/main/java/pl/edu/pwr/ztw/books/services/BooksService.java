@@ -1,5 +1,6 @@
 package pl.edu.pwr.ztw.books.services;
 
+import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
 import pl.edu.pwr.ztw.books.models.Book;
 import pl.edu.pwr.ztw.books.models.Author;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,12 @@ public class BooksService {
     }
 
     public Optional<Book> getBookById(int id) {
-        return books.stream().filter(b -> b.getId() == id).findFirst();
+        Optional<Book> book = books.stream().filter(b -> b.getId() == id).findAny();
+        if (book.isPresent()) {
+            return book;
+        }else{
+            throw new BookNotFoundException("book not found");
+        }
     }
 
     public Book createBook(Book book) {
@@ -44,11 +50,19 @@ public class BooksService {
             book.setAuthor(bookDetails.getAuthor());
             book.setPages(bookDetails.getPages());
         });
+        if (bookOptional.isEmpty()) {
+            throw new BookNotFoundException("book not found");
+        }
         return bookOptional;
     }
 
     public boolean deleteBook(int id) {
-        return books.removeIf(b -> b.getId() == id);
+        boolean result = books.removeIf(b -> b.getId() == id);
+        if (result) {
+            return true;
+        }else{
+            throw new BookNotFoundException("book not found");
+        }
     }
 
     public void markBookAsLent(int id, boolean lent) {

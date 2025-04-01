@@ -1,5 +1,7 @@
 package pl.edu.pwr.ztw.books.services;
 
+import pl.edu.pwr.ztw.books.exceptions.AuthorNotFoundException;
+import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
 import pl.edu.pwr.ztw.books.models.Author;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +25,12 @@ public class AuthorService {
     }
 
     public Optional<Author> getAuthorById(int id) {
-        return authors.stream().filter(a -> a.getId() == id).findFirst();
+        Optional<Author> author =  authors.stream().filter(a -> a.getId() == id).findFirst();
+        if (author.isPresent()) {
+            return author;
+        }else{
+            throw new AuthorNotFoundException("Author not found");
+        }
     }
 
     public Author createAuthor(Author author) {
@@ -35,10 +42,18 @@ public class AuthorService {
     public Optional<Author> updateAuthor(int id, Author authorDetails) {
         Optional<Author> authorOptional = getAuthorById(id);
         authorOptional.ifPresent(author -> author.setName(authorDetails.getName()));
+        if (authorOptional.isEmpty()) {
+            throw new AuthorNotFoundException("Author not found");
+        }
         return authorOptional;
     }
 
     public boolean deleteAuthor(int id) {
-        return authors.removeIf(a -> a.getId() == id);
+        boolean result = authors.removeIf(a -> a.getId() == id);
+        if (result) {
+            return true;
+        }else{
+            throw new AuthorNotFoundException("Author not found");
+        }
     }
 }
