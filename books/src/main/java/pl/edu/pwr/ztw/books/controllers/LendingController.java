@@ -1,8 +1,10 @@
 package pl.edu.pwr.ztw.books.controllers;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,44 +19,57 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/lendings")
-@Api(value = "Lending Management System", description = "Operations pertaining to lending books to readers")
+@Tag(name = "Lending Management System", description = "Operations pertaining to lending books to readers")
 public class LendingController {
 
     @Autowired
     private LendingService lendingService;
 
-    @ApiOperation(value = "View a list of lendings", response = List.class)
+    @Operation(summary = "View a list of lendings", description = "Returns a list of all lending records")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     @GetMapping
     public ResponseEntity<List<Lending>> getAllLendings(){
         return new ResponseEntity<>(lendingService.getAllLendings(), HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get a lending by Id")
+    @Operation(summary = "Get a lending by Id", description = "Fetch a lending record by its ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved lending"),
+            @ApiResponse(responseCode = "404", description = "Lending not found")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<Lending> getLendingById(
-            @ApiParam(value = "Lending id from which lending object will retrieve", required = true)
+            @Parameter(description = "Lending ID to retrieve the lending record", required = true)
             @PathVariable("id") int id){
         Optional<Lending> lendingOpt = lendingService.getLendingById(id);
         return lendingOpt.map(lending -> new ResponseEntity<>(lending, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @ApiOperation(value = "Lend a book to a reader")
+    @Operation(summary = "Lend a book to a reader", description = "Creates a new lending record for a book and a reader")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Book successfully lent"),
+            @ApiResponse(responseCode = "400", description = "Invalid request or book not available")
+    })
     @PostMapping("/lend")
     public ResponseEntity<Lending> lendBook(
-            @ApiParam(value = "ID of the book to lend", required = true)
+            @Parameter(description = "ID of the book to lend", required = true)
             @RequestParam int bookId,
-            @ApiParam(value = "Reader information", required = true)
+            @Parameter(description = "Reader information", required = true)
             @RequestBody Reader reader){
         Optional<Lending> lendingOpt = lendingService.lendBook(bookId, reader);
         return lendingOpt.map(lending -> new ResponseEntity<>(lending, HttpStatus.CREATED))
                 .orElse(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
     }
 
-    @ApiOperation(value = "Return a lent book")
+    @Operation(summary = "Return a lent book", description = "Marks a book as returned")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Book successfully returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid request or lending record not found")
+    })
     @PostMapping("/return")
     public ResponseEntity<Void> returnBook(
-            @ApiParam(value = "ID of the lending record", required = true)
+            @Parameter(description = "ID of the lending record", required = true)
             @RequestParam int lendingId){
         boolean returned = lendingService.returnBook(lendingId);
         if(returned){
@@ -64,3 +79,4 @@ public class LendingController {
         }
     }
 }
+
