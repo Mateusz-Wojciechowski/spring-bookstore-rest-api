@@ -1,23 +1,36 @@
 package pl.edu.pwr.ztw.books.models;
 
+import jakarta.persistence.*;
 import java.time.LocalDate;
 
+@Entity
+@Table(name = "lendings")
 public class Lending {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @ManyToOne
+    @JoinColumn(name = "book_id")
     private Book book;
+
+    @ManyToOne
+    @JoinColumn(name = "reader_id")
     private Reader reader;
+
     private LocalDate lendingDate;
 
     public Lending() {
     }
 
-    public Lending(int id, Book book, Reader reader, LocalDate lendingDate) {
-        this.id = id;
+    public Lending(Book book, Reader reader, LocalDate lendingDate) {
         this.book = book;
         this.reader = reader;
         this.lendingDate = lendingDate;
     }
 
+    // Gettery i settery
     public int getId() {
         return id;
     }
@@ -43,4 +56,3 @@ public class Lending {
         this.lendingDate = lendingDate;
     }
 }
-
