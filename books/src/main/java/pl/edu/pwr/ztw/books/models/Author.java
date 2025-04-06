@@ -1,11 +1,13 @@
 package pl.edu.pwr.ztw.books.models;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "authors")
+@JsonIgnoreProperties({"books"}) // ignorujemy listę książek przy serializacji autora
 public class Author {
 
     @Id
@@ -24,6 +26,7 @@ public class Author {
         this.name = name;
     }
 
+    // Gettery i settery
     public int getId() {
         return id;
     }

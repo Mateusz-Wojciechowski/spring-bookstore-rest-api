@@ -1,11 +1,13 @@
 package pl.edu.pwr.ztw.books.models;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "books")
+@JsonIgnoreProperties({"lendings"}) // ignorujemy wypożyczenia, aby nie powodowały cyklicznych referencji
 public class Book {
 
     @Id
@@ -35,7 +37,7 @@ public class Book {
         this.isLent = false;
     }
 
-
+    // Gettery i settery
     public int getId() {
         return id;
     }

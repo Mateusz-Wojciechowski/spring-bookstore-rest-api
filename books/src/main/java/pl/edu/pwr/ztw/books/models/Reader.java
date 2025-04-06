@@ -1,9 +1,11 @@
 package pl.edu.pwr.ztw.books.models;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "readers")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Reader {
 
     @Id
@@ -19,7 +21,6 @@ public class Reader {
         this.name = name;
     }
 
-    // Gettery i settery
     public int getId() {
         return id;
     }

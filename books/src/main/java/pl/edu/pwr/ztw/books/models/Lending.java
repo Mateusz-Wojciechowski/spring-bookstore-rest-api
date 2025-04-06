@@ -1,10 +1,12 @@
 package pl.edu.pwr.ztw.books.models;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "lendings")
+@JsonIgnoreProperties({"book"}) // jeżeli potrzebujesz, aby obiekt Lending nie zawierał pełnej informacji o książce
 public class Lending {
 
     @Id
@@ -30,7 +32,6 @@ public class Lending {
         this.lendingDate = lendingDate;
     }
 
-    // Gettery i settery
     public int getId() {
         return id;
     }
