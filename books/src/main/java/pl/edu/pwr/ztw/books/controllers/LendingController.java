@@ -8,12 +8,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.pwr.ztw.books.errors.ErrorResponseImpl;
 import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
 import pl.edu.pwr.ztw.books.exceptions.LendingNotFoundException;
+import pl.edu.pwr.ztw.books.models.Author;
 import pl.edu.pwr.ztw.books.models.Lending;
 import pl.edu.pwr.ztw.books.models.Reader;
 import pl.edu.pwr.ztw.books.services.LendingService;
@@ -32,8 +35,12 @@ public class LendingController {
     @Operation(summary = "View a list of lendings", description = "Returns a list of all lending records")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     @GetMapping
-    public ResponseEntity<List<Lending>> getAllLendings(){
-        return new ResponseEntity<>(lendingService.getAllLendings(), HttpStatus.OK);
+    public ResponseEntity<List<Lending>> getAllLendings(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = PageRequest.of(page, size);
+        List<Lending> lendings = lendingService.getAllLendings(pageable).getContent();
+        return new ResponseEntity<>(lendings, HttpStatus.OK);
     }
 
     @Operation(summary = "Get a lending by Id", description = "Fetch a lending record by its ID")

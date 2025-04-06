@@ -8,11 +8,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.pwr.ztw.books.errors.ErrorResponseImpl;
 import pl.edu.pwr.ztw.books.exceptions.ReaderNotFoundException;
+import pl.edu.pwr.ztw.books.models.Author;
 import pl.edu.pwr.ztw.books.models.Reader;
 import pl.edu.pwr.ztw.books.services.ReaderService;
 
@@ -30,8 +33,12 @@ public class ReaderController {
     @Operation(summary = "View a list of registered readers", description = "Returns a List of all readers")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     @GetMapping
-    public ResponseEntity<List<Reader>> getAllAuthors(){
-        return new ResponseEntity<>(readerService.getAllReaders(), HttpStatus.OK);
+    public ResponseEntity<List<Reader>> getAllAuthors(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = PageRequest.of(page, size);
+        List<Reader> readers = readerService.getAllReaders(pageable).getContent();
+        return new ResponseEntity<>(readers, HttpStatus.OK);
     }
 
     @Operation(summary = "Get a reader by Id", description = "Fetch a reader from the system using its ID")

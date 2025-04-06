@@ -1,6 +1,8 @@
 package pl.edu.pwr.ztw.books.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pl.edu.pwr.ztw.books.exceptions.LendingNotFoundException;
 import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
@@ -22,8 +24,8 @@ public class LendingService {
     @Autowired
     private BooksService bookService;
 
-    public List<Lending> getAllLendings() {
-        return lendingRepository.findAll();
+    public Page<Lending> getAllLendings(Pageable pageable) {
+        return lendingRepository.findAll(pageable);
     }
 
     public Optional<Lending> getLendingById(int id) {

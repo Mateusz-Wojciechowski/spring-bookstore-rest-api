@@ -1,6 +1,8 @@
 package pl.edu.pwr.ztw.books.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pl.edu.pwr.ztw.books.exceptions.AuthorNotFoundException;
 import pl.edu.pwr.ztw.books.models.Author;
@@ -15,8 +17,9 @@ public class AuthorService {
     @Autowired
     private AuthorRepository authorRepository;
 
-    public List<Author> getAllAuthors() {
-        return authorRepository.findAll();
+    public Page<Author> getAllAuthors(Pageable pageable) {
+//        Page<Author> result = authorRepository.findAll(pageable);
+        return authorRepository.findAll(pageable);
     }
 
     public Optional<Author> getAuthorById(int id) {

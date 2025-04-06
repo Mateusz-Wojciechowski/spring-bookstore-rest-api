@@ -1,6 +1,8 @@
 package pl.edu.pwr.ztw.books.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pl.edu.pwr.ztw.books.exceptions.ReaderNotFoundException;
 import pl.edu.pwr.ztw.books.models.Reader;
@@ -15,8 +17,8 @@ public class ReaderService {
     @Autowired
     private ReaderRepository readerRepository;
 
-    public List<Reader> getAllReaders() {
-        return readerRepository.findAll();
+    public Page<Reader> getAllReaders(Pageable pageable) {
+        return readerRepository.findAll(pageable);
     }
 
     public Optional<Reader> getReaderById(int id) {

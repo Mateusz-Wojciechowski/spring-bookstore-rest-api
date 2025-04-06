@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +32,12 @@ public class AuthorController {
     @Operation(summary = "View a list of available authors", description = "Returns a List of all authors")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     @GetMapping
-    public ResponseEntity<List<Author>> getAllAuthors(){
-        return new ResponseEntity<>(authorService.getAllAuthors(), HttpStatus.OK);
+    public ResponseEntity<List<Author>> getAllAuthors(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = PageRequest.of(page, size);
+        List<Author> authors = authorService.getAllAuthors(pageable).getContent();
+        return new ResponseEntity<>(authors, HttpStatus.OK);
     }
 
     @Operation(summary = "Get an author by Id", description = "Fetch an author from the system using its ID")

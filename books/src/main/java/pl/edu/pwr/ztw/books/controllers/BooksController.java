@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,8 +38,12 @@ public class BooksController {
     @Operation(summary = "View a list of available books", description = "Returns a List of all books")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     @GetMapping
-    public ResponseEntity<List<Book>> getAllBooks(){
-        return new ResponseEntity<>(bookService.getAllBooks(), HttpStatus.OK);
+    public ResponseEntity<List<Book>> getAllBooks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = PageRequest.of(page, size);
+        List<Book> books = bookService.getAllBooks(pageable).getContent();
+        return new ResponseEntity<>(books, HttpStatus.OK);
     }
 
     @Operation(summary = "Get a book by Id", description = "Fetch a book from the system using its ID")
