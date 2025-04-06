@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.pwr.ztw.books.errors.ErrorResponseImpl;
+import pl.edu.pwr.ztw.books.exceptions.AuthorNotFoundException;
 import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
 import pl.edu.pwr.ztw.books.models.Author;
 import pl.edu.pwr.ztw.books.models.Book;
@@ -62,17 +63,24 @@ public class BooksController {
     @Operation(summary = "Add a book", description = "Adds a new book to the system")
     @ApiResponse(responseCode = "201", description = "Book successfully created")
     @PostMapping
-    public ResponseEntity<Book> createBook(
+    public ResponseEntity<Object> createBook(
             @Parameter(description = "Book object to store in the database", required = true)
             @RequestBody Book book){
-        if(book.getAuthor() != null) {
-            Optional<Author> authorOpt = authorService.getAuthorById(book.getAuthor().getId());
-            if(authorOpt.isPresent()){
-                book.setAuthor(authorOpt.get());
-            } else {
-                Author newAuthor = authorService.createAuthor(book.getAuthor());
-                book.setAuthor(newAuthor);
+        try {
+            if (book.getAuthor() != null) {
+                Optional<Author> authorOpt = authorService.getAuthorById(book.getAuthor().getId());
+                if (authorOpt.isPresent()) {
+                    book.setAuthor(authorOpt.get());
+                } else {
+                    Author newAuthor = authorService.createAuthor(book.getAuthor());
+                    book.setAuthor(newAuthor);
+                }
             }
+        }catch (AuthorNotFoundException e) {
+            ErrorResponseImpl error = new ErrorResponseImpl();
+            error.setMessage(e.getMessage());
+            error.setStatus(404);
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         }
         Book createdBook = bookService.createBook(book);
         return new ResponseEntity<>(createdBook, HttpStatus.CREATED);
