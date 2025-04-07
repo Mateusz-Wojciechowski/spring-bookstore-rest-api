@@ -56,7 +56,7 @@ public class LendingService {
                 Lending lending = new Lending(book, reader, LocalDate.now());
                 return Optional.of(lendingRepository.save(lending));
             }
-            return Optional.empty();
+            throw new BookNotFoundException("Book already lent");
         }catch (CannotCreateTransactionException e){
             throw new DatabaseConnectionError("Database connection error");
         }

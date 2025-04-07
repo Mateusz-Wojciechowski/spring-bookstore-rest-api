@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.pwr.ztw.books.errors.ErrorResponseImpl;
+import pl.edu.pwr.ztw.books.exceptions.BookAlreadyLentException;
 import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
 import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.exceptions.LendingNotFoundException;
@@ -38,7 +39,7 @@ public class LendingController {
     @GetMapping
     public ResponseEntity<Object> getAllLendings(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size){
+            @RequestParam(defaultValue = "1000") int size){
         Pageable pageable = PageRequest.of(page, size);
         try {
             List<Lending> lendings = lendingService.getAllLendings(pageable).getContent();
@@ -84,8 +85,15 @@ public class LendingController {
             @RequestBody Reader reader){
 
         try {
-            Optional<Lending> lendingOpt = lendingService.lendBook(bookId, reader);
-            return new ResponseEntity<>(lendingOpt.get(), HttpStatus.OK);
+            try {
+                Optional<Lending> lendingOpt = lendingService.lendBook(bookId, reader);
+                return new ResponseEntity<>(lendingOpt.get(), HttpStatus.OK);
+            }catch (BookAlreadyLentException e) {
+                ErrorResponseImpl error = new ErrorResponseImpl();
+                error.setMessage(e.getMessage());
+                error.setStatus(404);
+                return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+            }
         }catch (BookNotFoundException|DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
