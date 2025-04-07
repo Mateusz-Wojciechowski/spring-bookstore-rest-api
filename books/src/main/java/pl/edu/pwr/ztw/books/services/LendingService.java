@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.CannotCreateTransactionException;
+import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.exceptions.LendingNotFoundException;
 import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
 import pl.edu.pwr.ztw.books.models.Book;
@@ -25,38 +27,54 @@ public class LendingService {
     private BooksService bookService;
 
     public Page<Lending> getAllLendings(Pageable pageable) {
-        return lendingRepository.findAll(pageable);
+        try {
+            return lendingRepository.findAll(pageable);
+        }catch (CannotCreateTransactionException e){
+            throw new DatabaseConnectionError("Database connection error");
+        }
     }
 
     public Optional<Lending> getLendingById(int id) {
-        Optional<Lending> lending = lendingRepository.findById(id);
-        if (lending.isPresent()) {
-            return lending;
-        } else {
-            throw new LendingNotFoundException("Lending not found");
+        try {
+            Optional<Lending> lending = lendingRepository.findById(id);
+            if (lending.isPresent()) {
+                return lending;
+            } else {
+                throw new LendingNotFoundException("Lending not found");
+            }
+        }catch (CannotCreateTransactionException e){
+            throw new DatabaseConnectionError("Database connection error");
         }
     }
 
     public Optional<Lending> lendBook(int bookId, Reader reader) {
-        Optional<Book> bookOpt = bookService.getBookById(bookId);
-        if (bookOpt.isPresent() && !bookOpt.get().isLent()) {
-            Book book = bookOpt.get();
-            bookService.markBookAsLent(bookId, true);
-            Lending lending = new Lending(book, reader, LocalDate.now());
-            return Optional.of(lendingRepository.save(lending));
+        try {
+            Optional<Book> bookOpt = bookService.getBookById(bookId);
+            if (bookOpt.isPresent() && !bookOpt.get().isLent()) {
+                Book book = bookOpt.get();
+                bookService.markBookAsLent(bookId, true);
+                Lending lending = new Lending(book, reader, LocalDate.now());
+                return Optional.of(lendingRepository.save(lending));
+            }
+            return Optional.empty();
+        }catch (CannotCreateTransactionException e){
+            throw new DatabaseConnectionError("Database connection error");
         }
-        return Optional.empty();
     }
 
     public boolean returnBook(int lendingId) {
-        Optional<Lending> lendingOpt = getLendingById(lendingId);
-        if (lendingOpt.isPresent()){
-            Lending lending = lendingOpt.get();
-            int bookId = lending.getBook().getId();
-            bookService.markBookAsLent(bookId, false);
-            lendingRepository.delete(lending);
-            return true;
+        try {
+            Optional<Lending> lendingOpt = getLendingById(lendingId);
+            if (lendingOpt.isPresent()){
+                Lending lending = lendingOpt.get();
+                int bookId = lending.getBook().getId();
+                bookService.markBookAsLent(bookId, false);
+                lendingRepository.delete(lending);
+                return true;
+            }
+            return false;
+        }catch (CannotCreateTransactionException e){
+            throw new DatabaseConnectionError("Database connection error");
         }
-        return false;
     }
 }

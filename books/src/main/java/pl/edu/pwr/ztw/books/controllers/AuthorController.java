@@ -61,7 +61,7 @@ public class AuthorController {
         try {
             Optional<Author> authorOpt = authorService.getAuthorById(id);
             return new ResponseEntity<>(authorOpt.get(), HttpStatus.OK);
-        }catch (AuthorNotFoundException e) {
+        }catch (AuthorNotFoundException|DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -72,11 +72,18 @@ public class AuthorController {
     @Operation(summary = "Add an author", description = "Adds a new author to the system")
     @ApiResponse(responseCode = "201", description = "Author successfully created")
     @PostMapping
-    public ResponseEntity<Author> createAuthor(
+    public ResponseEntity<Object> createAuthor(
             @Parameter(description = "Author object to store in the database", required = true)
             @RequestBody Author author){
-        Author createdAuthor = authorService.createAuthor(author);
-        return new ResponseEntity<>(createdAuthor, HttpStatus.CREATED);
+        try {
+            Author createdAuthor = authorService.createAuthor(author);
+            return new ResponseEntity<>(createdAuthor, HttpStatus.CREATED);
+        } catch (DatabaseConnectionError e) {
+            ErrorResponseImpl error = new ErrorResponseImpl();
+            error.setMessage(e.getMessage());
+            error.setStatus(404);
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        }
     }
 
     @Operation(summary = "Update an author", description = "Updates an existing author by ID")
@@ -93,7 +100,7 @@ public class AuthorController {
         try {
             Optional<Author> updatedAuthor = authorService.updateAuthor(id, authorDetails);
             return new ResponseEntity<>(updatedAuthor.get(), HttpStatus.OK);
-        }catch (AuthorNotFoundException e) {
+        }catch (AuthorNotFoundException|DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -113,7 +120,7 @@ public class AuthorController {
         try {
             boolean deleted = authorService.deleteAuthor(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }catch (AuthorNotFoundException e) {
+        }catch (AuthorNotFoundException|DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);

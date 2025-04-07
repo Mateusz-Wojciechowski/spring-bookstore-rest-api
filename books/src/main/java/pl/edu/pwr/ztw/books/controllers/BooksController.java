@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import pl.edu.pwr.ztw.books.errors.ErrorResponseImpl;
 import pl.edu.pwr.ztw.books.exceptions.AuthorNotFoundException;
 import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
+import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.models.Author;
 import pl.edu.pwr.ztw.books.models.Book;
 import pl.edu.pwr.ztw.books.services.AuthorService;
@@ -38,12 +39,19 @@ public class BooksController {
     @Operation(summary = "View a list of available books", description = "Returns a List of all books")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     @GetMapping
-    public ResponseEntity<List<Book>> getAllBooks(
+    public ResponseEntity<Object> getAllBooks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size){
         Pageable pageable = PageRequest.of(page, size);
-        List<Book> books = bookService.getAllBooks(pageable).getContent();
-        return new ResponseEntity<>(books, HttpStatus.OK);
+        try {
+            List<Book> books = bookService.getAllBooks(pageable).getContent();
+            return new ResponseEntity<>(books, HttpStatus.OK);
+        } catch (DatabaseConnectionError e) {
+            ErrorResponseImpl error = new ErrorResponseImpl();
+            error.setMessage(e.getMessage());
+            error.setStatus(404);
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        }
     }
 
     @Operation(summary = "Get a book by Id", description = "Fetch a book from the system using its ID")
@@ -58,9 +66,9 @@ public class BooksController {
         try {
             Optional<Book> bookOpt = bookService.getBookById(id);
             return new ResponseEntity<>(bookOpt.get(), HttpStatus.OK);
-        }catch (BookNotFoundException e) {
+        }catch (BookNotFoundException|DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
-            error.setMessage("Book not found");
+            error.setMessage(e.getMessage());
             error.setStatus(404);
             return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         }
@@ -73,23 +81,30 @@ public class BooksController {
             @Parameter(description = "Book object to store in the database", required = true)
             @RequestBody Book book){
         try {
-            if (book.getAuthor() != null) {
-                Optional<Author> authorOpt = authorService.getAuthorById(book.getAuthor().getId());
-                if (authorOpt.isPresent()) {
-                    book.setAuthor(authorOpt.get());
-                } else {
-                    Author newAuthor = authorService.createAuthor(book.getAuthor());
-                    book.setAuthor(newAuthor);
+            try {
+                if (book.getAuthor() != null) {
+                    Optional<Author> authorOpt = authorService.getAuthorById(book.getAuthor().getId());
+                    if (authorOpt.isPresent()) {
+                        book.setAuthor(authorOpt.get());
+                    } else {
+                        Author newAuthor = authorService.createAuthor(book.getAuthor());
+                        book.setAuthor(newAuthor);
+                    }
                 }
+            } catch (AuthorNotFoundException e) {
+                ErrorResponseImpl error = new ErrorResponseImpl();
+                error.setMessage(e.getMessage());
+                error.setStatus(404);
+                return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
             }
-        }catch (AuthorNotFoundException e) {
+            Book createdBook = bookService.createBook(book);
+            return new ResponseEntity<>(createdBook, HttpStatus.CREATED);
+        }catch (DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
             return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         }
-        Book createdBook = bookService.createBook(book);
-        return new ResponseEntity<>(createdBook, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Update a book", description = "Updates an existing book by ID")
@@ -103,27 +118,31 @@ public class BooksController {
             @PathVariable("id") int id,
             @Parameter(description = "Updated book object", required = true)
             @RequestBody Book bookDetails){
-        if(bookDetails.getAuthor() != null) {
-            Optional<Author> authorOpt = authorService.getAuthorById(bookDetails.getAuthor().getId());
-            if(authorOpt.isPresent()){
-                bookDetails.setAuthor(authorOpt.get());
-            } else {
-                Author newAuthor = authorService.createAuthor(bookDetails.getAuthor());
-                bookDetails.setAuthor(newAuthor);
-            }
-        }
         try {
-            Optional<Book> updatedBook = bookService.updateBook(id, bookDetails);
-            return new ResponseEntity<>(updatedBook.get(), HttpStatus.OK);
-        }catch (BookNotFoundException e) {
+            if (bookDetails.getAuthor() != null) {
+                Optional<Author> authorOpt = authorService.getAuthorById(bookDetails.getAuthor().getId());
+                if (authorOpt.isPresent()) {
+                    bookDetails.setAuthor(authorOpt.get());
+                } else {
+                    Author newAuthor = authorService.createAuthor(bookDetails.getAuthor());
+                    bookDetails.setAuthor(newAuthor);
+                }
+            }
+            try {
+                Optional<Book> updatedBook = bookService.updateBook(id, bookDetails);
+                return new ResponseEntity<>(updatedBook.get(), HttpStatus.OK);
+            } catch (BookNotFoundException e) {
+                ErrorResponseImpl error = new ErrorResponseImpl();
+                error.setMessage(e.getMessage());
+                error.setStatus(404);
+                return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+            }
+        }catch (DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
-            error.setMessage("Book not found");
+            error.setMessage(e.getMessage());
             error.setStatus(404);
             return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         }
-//        Optional<Book> updatedBook = bookService.updateBook(id, bookDetails);
-//        return updatedBook.map(book -> new ResponseEntity<>(book, HttpStatus.OK))
-//                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @Operation(summary = "Delete a book", description = "Deletes a book by ID")
@@ -136,11 +155,11 @@ public class BooksController {
             @Parameter(description = "Book Id to delete from the database", required = true)
             @PathVariable("id") int id){
         try {
-            boolean deleted = bookService.deleteBook(id);
+            bookService.deleteBook(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }catch (BookNotFoundException e) {
+        }catch (BookNotFoundException|DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
-            error.setMessage("Book not found");
+            error.setMessage(e.getMessage());
             error.setStatus(404);
             return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         }
