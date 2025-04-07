@@ -15,9 +15,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.pwr.ztw.books.errors.ErrorResponseImpl;
 import pl.edu.pwr.ztw.books.exceptions.AuthorNotFoundException;
+import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.models.Author;
 import pl.edu.pwr.ztw.books.services.AuthorService;
 
+import java.net.ConnectException;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,12 +34,19 @@ public class AuthorController {
     @Operation(summary = "View a list of available authors", description = "Returns a List of all authors")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     @GetMapping
-    public ResponseEntity<List<Author>> getAllAuthors(
+    public ResponseEntity<Object> getAllAuthors(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size){
         Pageable pageable = PageRequest.of(page, size);
-        List<Author> authors = authorService.getAllAuthors(pageable).getContent();
-        return new ResponseEntity<>(authors, HttpStatus.OK);
+        try {
+            List<Author> authors = authorService.getAllAuthors(pageable).getContent();
+            return new ResponseEntity<>(authors, HttpStatus.OK);
+        } catch (DatabaseConnectionError e) {
+            ErrorResponseImpl error = new ErrorResponseImpl();
+            error.setMessage(e.getMessage());
+            error.setStatus(404);
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        }
     }
 
     @Operation(summary = "Get an author by Id", description = "Fetch an author from the system using its ID")

@@ -4,10 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.CannotCreateTransactionException;
 import pl.edu.pwr.ztw.books.exceptions.AuthorNotFoundException;
+import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.models.Author;
 import pl.edu.pwr.ztw.books.repositories.AuthorRepository;
 
+import java.net.ConnectException;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +22,11 @@ public class AuthorService {
 
     public Page<Author> getAllAuthors(Pageable pageable) {
 //        Page<Author> result = authorRepository.findAll(pageable);
-        return authorRepository.findAll(pageable);
+        try {
+            return authorRepository.findAll(pageable);
+        }catch (CannotCreateTransactionException e){
+            throw new DatabaseConnectionError("Database connection error");
+        }
     }
 
     public Optional<Author> getAuthorById(int id) {
