@@ -43,7 +43,7 @@ public class LendingController {
         try {
             List<Lending> lendings = lendingService.getAllLendings(pageable).getContent();
             return new ResponseEntity<>(lendings, HttpStatus.OK);
-        }catch (BookNotFoundException e) {
+        }catch (DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);

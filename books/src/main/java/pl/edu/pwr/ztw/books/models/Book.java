@@ -37,7 +37,6 @@ public class Book {
         this.isLent = false;
     }
 
-    // Gettery i settery
     public int getId() {
         return id;
     }
