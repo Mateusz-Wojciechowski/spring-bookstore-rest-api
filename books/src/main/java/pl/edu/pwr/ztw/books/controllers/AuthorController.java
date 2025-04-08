@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -19,10 +20,6 @@ import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.models.Author;
 import pl.edu.pwr.ztw.books.services.AuthorService;
 
-import java.net.ConnectException;
-import java.util.List;
-import java.util.Optional;
-
 @RestController
 @RequestMapping("/api/authors")
 @Tag(name = "Author Management System", description = "Operations pertaining to authors in Book Management System")
@@ -31,16 +28,16 @@ public class AuthorController {
     @Autowired
     private AuthorService authorService;
 
-    @Operation(summary = "View a list of available authors", description = "Returns a List of all authors")
+    @Operation(summary = "View a paginated list of available authors", description = "Returns a paginated list of all authors")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     @GetMapping
     public ResponseEntity<Object> getAllAuthors(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size){
+            @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         try {
-            List<Author> authors = authorService.getAllAuthors(pageable).getContent();
-            return new ResponseEntity<>(authors, HttpStatus.OK);
+            Page<Author> authorsPage = authorService.getAllAuthors(pageable);
+            return new ResponseEntity<>(authorsPage, HttpStatus.OK);
         } catch (DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
@@ -57,11 +54,11 @@ public class AuthorController {
     @GetMapping("/{id}")
     public ResponseEntity<Object> getAuthorById(
             @Parameter(description = "Author id from which author object will be retrieved", required = true)
-            @PathVariable("id") int id){
+            @PathVariable("id") int id) {
         try {
-            Optional<Author> authorOpt = authorService.getAuthorById(id);
-            return new ResponseEntity<>(authorOpt.get(), HttpStatus.OK);
-        }catch (AuthorNotFoundException|DatabaseConnectionError e) {
+            Author author = authorService.getAuthorById(id).get();
+            return new ResponseEntity<>(author, HttpStatus.OK);
+        } catch (AuthorNotFoundException | DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -74,7 +71,7 @@ public class AuthorController {
     @PostMapping
     public ResponseEntity<Object> createAuthor(
             @Parameter(description = "Author object to store in the database", required = true)
-            @RequestBody Author author){
+            @RequestBody Author author) {
         try {
             Author createdAuthor = authorService.createAuthor(author);
             return new ResponseEntity<>(createdAuthor, HttpStatus.CREATED);
@@ -96,11 +93,11 @@ public class AuthorController {
             @Parameter(description = "Author Id to update author object", required = true)
             @PathVariable("id") int id,
             @Parameter(description = "Updated author object", required = true)
-            @RequestBody Author authorDetails){
+            @RequestBody Author authorDetails) {
         try {
-            Optional<Author> updatedAuthor = authorService.updateAuthor(id, authorDetails);
-            return new ResponseEntity<>(updatedAuthor.get(), HttpStatus.OK);
-        }catch (AuthorNotFoundException|DatabaseConnectionError e) {
+            Author updatedAuthor = authorService.updateAuthor(id, authorDetails).get();
+            return new ResponseEntity<>(updatedAuthor, HttpStatus.OK);
+        } catch (AuthorNotFoundException | DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -116,11 +113,11 @@ public class AuthorController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteAuthor(
             @Parameter(description = "Author Id to delete from the database", required = true)
-            @PathVariable("id") int id){
+            @PathVariable("id") int id) {
         try {
-            boolean deleted = authorService.deleteAuthor(id);
+            authorService.deleteAuthor(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }catch (AuthorNotFoundException|DatabaseConnectionError e) {
+        } catch (AuthorNotFoundException | DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -128,4 +125,3 @@ public class AuthorController {
         }
     }
 }
-

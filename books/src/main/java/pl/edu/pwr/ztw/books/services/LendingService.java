@@ -14,7 +14,6 @@ import pl.edu.pwr.ztw.books.models.Reader;
 import pl.edu.pwr.ztw.books.repositories.LendingRepository;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -29,7 +28,7 @@ public class LendingService {
     public Page<Lending> getAllLendings(Pageable pageable) {
         try {
             return lendingRepository.findAll(pageable);
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -42,7 +41,7 @@ public class LendingService {
             } else {
                 throw new LendingNotFoundException("Lending not found");
             }
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -56,8 +55,8 @@ public class LendingService {
                 Lending lending = new Lending(book, reader, LocalDate.now());
                 return Optional.of(lendingRepository.save(lending));
             }
-            throw new BookNotFoundException("Book already lent");
-        }catch (CannotCreateTransactionException e){
+            throw new BookNotFoundException("Book already lent or not found");
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -65,7 +64,7 @@ public class LendingService {
     public boolean returnBook(int lendingId) {
         try {
             Optional<Lending> lendingOpt = getLendingById(lendingId);
-            if (lendingOpt.isPresent()){
+            if (lendingOpt.isPresent()) {
                 Lending lending = lendingOpt.get();
                 int bookId = lending.getBook().getId();
                 bookService.markBookAsLent(bookId, false);
@@ -73,7 +72,7 @@ public class LendingService {
                 return true;
             }
             return false;
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }

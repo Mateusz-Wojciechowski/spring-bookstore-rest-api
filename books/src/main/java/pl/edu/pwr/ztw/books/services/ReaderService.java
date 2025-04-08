@@ -10,7 +10,6 @@ import pl.edu.pwr.ztw.books.exceptions.ReaderNotFoundException;
 import pl.edu.pwr.ztw.books.models.Reader;
 import pl.edu.pwr.ztw.books.repositories.ReaderRepository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,7 +21,7 @@ public class ReaderService {
     public Page<Reader> getAllReaders(Pageable pageable) {
         try {
             return readerRepository.findAll(pageable);
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -35,7 +34,7 @@ public class ReaderService {
             } else {
                 throw new ReaderNotFoundException("Reader not found");
             }
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -43,7 +42,7 @@ public class ReaderService {
     public Reader createReader(Reader reader) {
         try {
             return readerRepository.save(reader);
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -58,7 +57,7 @@ public class ReaderService {
             } else {
                 throw new ReaderNotFoundException("Reader not found");
             }
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -72,7 +71,7 @@ public class ReaderService {
             } else {
                 throw new ReaderNotFoundException("Reader not found");
             }
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }

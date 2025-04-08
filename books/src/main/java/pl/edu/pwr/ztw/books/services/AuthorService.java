@@ -5,7 +5,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.CannotCreateTransactionException;
-
 import pl.edu.pwr.ztw.books.exceptions.AuthorNotFoundException;
 import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.models.Author;
@@ -20,10 +19,9 @@ public class AuthorService {
     private AuthorRepository authorRepository;
 
     public Page<Author> getAllAuthors(Pageable pageable) {
-//        Page<Author> result = authorRepository.findAll(pageable);
         try {
             return authorRepository.findAll(pageable);
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -36,7 +34,7 @@ public class AuthorService {
             } else {
                 throw new AuthorNotFoundException("Author not found");
             }
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -44,7 +42,7 @@ public class AuthorService {
     public Author createAuthor(Author author) {
         try {
             return authorRepository.save(author);
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -59,7 +57,7 @@ public class AuthorService {
             } else {
                 throw new AuthorNotFoundException("Author not found");
             }
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -73,7 +71,7 @@ public class AuthorService {
             } else {
                 throw new AuthorNotFoundException("Author not found");
             }
-        }catch (CannotCreateTransactionException e) {
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }

@@ -10,7 +10,6 @@ import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.models.Book;
 import pl.edu.pwr.ztw.books.repositories.BookRepository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,7 +21,7 @@ public class BooksService {
     public Page<Book> getAllBooks(Pageable pageable) {
         try {
             return bookRepository.findAll(pageable);
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -35,7 +34,7 @@ public class BooksService {
             } else {
                 throw new BookNotFoundException("Book not found");
             }
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -43,7 +42,7 @@ public class BooksService {
     public Book createBook(Book book) {
         try {
             return bookRepository.save(book);
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -60,7 +59,7 @@ public class BooksService {
             } else {
                 throw new BookNotFoundException("Book not found");
             }
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -74,7 +73,7 @@ public class BooksService {
             } else {
                 throw new BookNotFoundException("Book not found");
             }
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }
@@ -89,7 +88,7 @@ public class BooksService {
             } else {
                 throw new BookNotFoundException("Book not found");
             }
-        }catch (CannotCreateTransactionException e){
+        } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
         }
     }

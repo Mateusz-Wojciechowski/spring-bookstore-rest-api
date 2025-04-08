@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -17,11 +17,9 @@ import org.springframework.web.bind.annotation.*;
 import pl.edu.pwr.ztw.books.errors.ErrorResponseImpl;
 import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.exceptions.ReaderNotFoundException;
-import pl.edu.pwr.ztw.books.models.Author;
 import pl.edu.pwr.ztw.books.models.Reader;
 import pl.edu.pwr.ztw.books.services.ReaderService;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -32,17 +30,17 @@ public class ReaderController {
     @Autowired
     private ReaderService readerService;
 
-    @Operation(summary = "View a list of registered readers", description = "Returns a List of all readers")
+    @Operation(summary = "View a paginated list of registered readers", description = "Returns a paginated list of all readers")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     @GetMapping
-    public ResponseEntity<Object> getAllAuthors(
+    public ResponseEntity<Object> getAllReaders(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size){
+            @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         try {
-            List<Reader> readers = readerService.getAllReaders(pageable).getContent();
-            return new ResponseEntity<>(readers, HttpStatus.OK);
-        }catch (DatabaseConnectionError e) {
+            Page<Reader> readersPage = readerService.getAllReaders(pageable);
+            return new ResponseEntity<>(readersPage, HttpStatus.OK);
+        } catch (DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -58,11 +56,11 @@ public class ReaderController {
     @GetMapping("/{id}")
     public ResponseEntity<Object> getReaderById(
             @Parameter(description = "Reader id from which reader object will be retrieved", required = true)
-            @PathVariable("id") int id){
+            @PathVariable("id") int id) {
         try {
             Optional<Reader> readerOpt = readerService.getReaderById(id);
             return new ResponseEntity<>(readerOpt.get(), HttpStatus.OK);
-        }catch (ReaderNotFoundException|DatabaseConnectionError e) {
+        } catch (ReaderNotFoundException | DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -73,13 +71,13 @@ public class ReaderController {
     @Operation(summary = "Add a reader", description = "Adds a new reader to the system")
     @ApiResponse(responseCode = "201", description = "Reader successfully created")
     @PostMapping
-    public ResponseEntity<Object> createAuthor(
+    public ResponseEntity<Object> createReader(
             @Parameter(description = "Reader object to store in the database", required = true)
-            @RequestBody Reader reader){
+            @RequestBody Reader reader) {
         try {
             Reader createdReader = readerService.createReader(reader);
             return new ResponseEntity<>(createdReader, HttpStatus.CREATED);
-        }catch (DatabaseConnectionError e) {
+        } catch (DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -97,11 +95,11 @@ public class ReaderController {
             @Parameter(description = "Reader Id to update reader object", required = true)
             @PathVariable("id") int id,
             @Parameter(description = "Updated reader object", required = true)
-            @RequestBody Reader readerDetails){
+            @RequestBody Reader readerDetails) {
         try {
             Optional<Reader> updatedReader = readerService.updateReader(id, readerDetails);
             return new ResponseEntity<>(updatedReader.get(), HttpStatus.OK);
-        }catch (ReaderNotFoundException|DatabaseConnectionError e) {
+        } catch (ReaderNotFoundException | DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -117,11 +115,11 @@ public class ReaderController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteReader(
             @Parameter(description = "Reader Id to delete from the database", required = true)
-            @PathVariable("id") int id){
+            @PathVariable("id") int id) {
         try {
-            boolean deleted = readerService.deleteReader(id);
+            readerService.deleteReader(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }catch (ReaderNotFoundException|DatabaseConnectionError e) {
+        } catch (ReaderNotFoundException | DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);

@@ -14,16 +14,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.pwr.ztw.books.errors.ErrorResponseImpl;
-import pl.edu.pwr.ztw.books.exceptions.BookAlreadyLentException;
-import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
 import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.exceptions.LendingNotFoundException;
-import pl.edu.pwr.ztw.books.models.Author;
 import pl.edu.pwr.ztw.books.models.Lending;
 import pl.edu.pwr.ztw.books.models.Reader;
 import pl.edu.pwr.ztw.books.services.LendingService;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
 import java.util.Optional;
 
 @RestController
@@ -34,17 +31,17 @@ public class LendingController {
     @Autowired
     private LendingService lendingService;
 
-    @Operation(summary = "View a list of lendings", description = "Returns a list of all lending records")
+    @Operation(summary = "View a paginated list of lendings", description = "Returns a paginated list of all lending records")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     @GetMapping
     public ResponseEntity<Object> getAllLendings(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "1000") int size){
+            @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         try {
-            List<Lending> lendings = lendingService.getAllLendings(pageable).getContent();
-            return new ResponseEntity<>(lendings, HttpStatus.OK);
-        }catch (DatabaseConnectionError e) {
+            Page<Lending> lendingsPage = lendingService.getAllLendings(pageable);
+            return new ResponseEntity<>(lendingsPage, HttpStatus.OK);
+        } catch (DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -60,11 +57,11 @@ public class LendingController {
     @GetMapping("/{id}")
     public ResponseEntity<Object> getLendingById(
             @Parameter(description = "Lending ID to retrieve the lending record", required = true)
-            @PathVariable("id") int id){
+            @PathVariable("id") int id) {
         try {
             Optional<Lending> lendingOpt = lendingService.getLendingById(id);
             return new ResponseEntity<>(lendingOpt.get(), HttpStatus.OK);
-        }catch (LendingNotFoundException | DatabaseConnectionError e) {
+        } catch (LendingNotFoundException | DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -82,19 +79,11 @@ public class LendingController {
             @Parameter(description = "ID of the book to lend", required = true)
             @RequestParam int bookId,
             @Parameter(description = "Reader information", required = true)
-            @RequestBody Reader reader){
-
+            @RequestBody Reader reader) {
         try {
-            try {
-                Optional<Lending> lendingOpt = lendingService.lendBook(bookId, reader);
-                return new ResponseEntity<>(lendingOpt.get(), HttpStatus.OK);
-            }catch (BookAlreadyLentException e) {
-                ErrorResponseImpl error = new ErrorResponseImpl();
-                error.setMessage(e.getMessage());
-                error.setStatus(404);
-                return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
-            }
-        }catch (BookNotFoundException|DatabaseConnectionError e) {
+            Optional<Lending> lendingOpt = lendingService.lendBook(bookId, reader);
+            return new ResponseEntity<>(lendingOpt.get(), HttpStatus.OK);
+        } catch (Exception e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -110,11 +99,11 @@ public class LendingController {
     @PostMapping("/return")
     public ResponseEntity<Object> returnBook(
             @Parameter(description = "ID of the lending record", required = true)
-            @RequestParam int lendingId){
+            @RequestParam int lendingId) {
         try {
             lendingService.returnBook(lendingId);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }catch (LendingNotFoundException|DatabaseConnectionError e) {
+        } catch (LendingNotFoundException | DatabaseConnectionError e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
@@ -122,4 +111,3 @@ public class LendingController {
         }
     }
 }
-
