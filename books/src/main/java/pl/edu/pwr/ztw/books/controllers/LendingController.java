@@ -36,7 +36,7 @@ public class LendingController {
     @GetMapping
     public ResponseEntity<Object> getAllLendings(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "1000") int size) {
         Pageable pageable = PageRequest.of(page, size);
         try {
             Page<Lending> lendingsPage = lendingService.getAllLendings(pageable);
