@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.pwr.ztw.books.errors.ErrorResponseImpl;
 import pl.edu.pwr.ztw.books.exceptions.AuthorNotFoundException;
+import pl.edu.pwr.ztw.books.exceptions.DataIntegrityException;
 import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.models.Author;
 import pl.edu.pwr.ztw.books.services.AuthorService;
@@ -42,6 +43,7 @@ public class AuthorController {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);
+
             return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         }
     }
@@ -117,7 +119,7 @@ public class AuthorController {
         try {
             authorService.deleteAuthor(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (AuthorNotFoundException | DatabaseConnectionError e) {
+        } catch (AuthorNotFoundException | DatabaseConnectionError | DataIntegrityException e) {
             ErrorResponseImpl error = new ErrorResponseImpl();
             error.setMessage(e.getMessage());
             error.setStatus(404);

@@ -1,11 +1,13 @@
 package pl.edu.pwr.ztw.books.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.CannotCreateTransactionException;
 import pl.edu.pwr.ztw.books.exceptions.BookNotFoundException;
+import pl.edu.pwr.ztw.books.exceptions.DataIntegrityException;
 import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.models.Book;
 import pl.edu.pwr.ztw.books.repositories.BookRepository;
@@ -75,6 +77,8 @@ public class BooksService {
             }
         } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
+        } catch (DataIntegrityViolationException e) {
+            throw new DataIntegrityException("Cannot delete book that is lent");
         }
     }
 

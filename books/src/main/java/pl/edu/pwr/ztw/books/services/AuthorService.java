@@ -1,11 +1,13 @@
 package pl.edu.pwr.ztw.books.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.CannotCreateTransactionException;
 import pl.edu.pwr.ztw.books.exceptions.AuthorNotFoundException;
+import pl.edu.pwr.ztw.books.exceptions.DataIntegrityException;
 import pl.edu.pwr.ztw.books.exceptions.DatabaseConnectionError;
 import pl.edu.pwr.ztw.books.models.Author;
 import pl.edu.pwr.ztw.books.repositories.AuthorRepository;
@@ -73,6 +75,8 @@ public class AuthorService {
             }
         } catch (CannotCreateTransactionException e) {
             throw new DatabaseConnectionError("Database connection error");
+        } catch (DataIntegrityViolationException e){
+            throw new DataIntegrityException("Cannot delete author. Author have books in database");
         }
     }
 }
